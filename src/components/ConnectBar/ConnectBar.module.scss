@@ -1,0 +1,224 @@
+@use '@/styles/screen';
+
+.connectBar {
+  width: 100%;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadiusMedium);
+  background: var(--colorNeutralBackground2);
+  overflow: hidden;
+
+  .collapsed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    user-select: none;
+
+    @include screen.small-to-medium {
+      flex-wrap: wrap;
+      gap: 6px 10px;
+    }
+
+    &:hover {
+      background: var(--colorNeutralBackground2Hover);
+    }
+  }
+
+  .statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+    flex-shrink: 0;
+  }
+
+  .title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--colorNeutralForeground1);
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+
+  .url {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    color: #2e7d32;
+    background: transparent;
+    white-space: nowrap;
+    overflow-x: auto;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.4;
+    scrollbar-width: none;
+
+    @include screen.small-to-medium {
+      flex-basis: 100%;
+      order: 3;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .copyBtn {
+    flex-shrink: 0;
+    min-width: 40px;
+  }
+
+  .docsLink {
+    font-size: 0.8125rem;
+    color: var(--colorBrandForeground1);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .expandBtn {
+    flex-shrink: 0;
+    min-width: 28px;
+  }
+
+  .expandedContent {
+    border-top: 1px solid var(--colorNeutralStroke2);
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tabList {
+    border-bottom: none;
+  }
+
+  .tabContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .configHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hint {
+    font-size: 0.75rem;
+    color: var(--colorNeutralForeground3);
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.7rem;
+      background: transparent;
+      padding: 1px 5px;
+      border-radius: var(--borderRadiusSmall);
+    }
+  }
+
+  .codeBlock {
+    position: relative;
+    display: flex;
+    margin: 0;
+    padding: 14px 16px;
+    background: var(--colorNeutralBackground4);
+    border-radius: var(--borderRadiusMedium);
+    overflow-x: auto;
+  }
+
+  .codeBlockCopyBtn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 32px;
+    z-index: 1;
+    color: var(--colorNeutralForeground3);
+
+    &:hover {
+      color: var(--colorNeutralForeground1);
+    }
+  }
+
+  .lineNumbers {
+    display: flex;
+    flex-direction: column;
+    padding-right: 16px;
+    border-right: 1px solid var(--colorNeutralStroke2);
+    margin-right: 16px;
+    user-select: none;
+
+    span {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: var(--colorNeutralForeground4);
+      text-align: right;
+      min-width: 1.5em;
+    }
+  }
+
+  .codeContent {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: var(--colorNeutralForeground1);
+      background: transparent;
+    }
+  }
+
+  // JSON syntax — light
+  .jsonKey { color: #0451a5; }
+  .jsonString { color: #a31515; }
+  .jsonKeyword { color: #0000ff; }
+  .jsonNumber { color: #098658; }
+
+  .commandRow {
+    display: flex;
+    align-items: center;
+    background: var(--colorNeutralBackground4);
+    border-radius: var(--borderRadiusMedium);
+    overflow: hidden;
+  }
+
+  .command {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    color: #0451a5;
+    background: transparent;
+    white-space: nowrap;
+    overflow-x: auto;
+    user-select: text;
+    line-height: 1.4;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+// ── Dark mode overrides ──
+:global([data-theme="dark"]) {
+  .connectBar {
+    .url { color: #4caf50; }
+    .command { color: #4caf50; }
+    .jsonKey { color: #9cdcfe; }
+    .jsonString { color: #ce9178; }
+    .jsonKeyword { color: #569cd6; }
+    .jsonNumber { color: #b5cea8; }
+  }
+}

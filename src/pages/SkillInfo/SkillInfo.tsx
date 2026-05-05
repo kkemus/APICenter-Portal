@@ -1,9 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Badge, Button, Tab, TabList } from '@fluentui/react-components';
-import { DocumentRegular } from '@fluentui/react-icons';
+import { ArrowDownloadRegular, DocumentRegular } from '@fluentui/react-icons';
+import { useRecoilValue } from 'recoil';
 import { useApi } from '@/hooks/useApi';
 import { useSkillEvaluationResult } from '@/hooks/useSkillEvaluationResult';
+import { configAtom } from '@/atoms/configAtom';
 import { setDocumentTitle } from '@/utils/dom';
 import { DetailPageLayout } from '@/components/DetailPageLayout/DetailPageLayout';
 import { HeaderActions } from '@/experiences/HeaderActions';
@@ -12,6 +14,8 @@ import { buildSkillDeeplink } from '@/utils/skillDeeplink';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import CustomMetadata from '@/components/CustomMetadata';
 import { EmptyStateMessage } from '@/components/EmptyStateMessage/EmptyStateMessage';
+import { ConnectPanel } from '@/components/ConnectPanel';
+import { InstallationBlock } from '@/components/InstallationBlock';
 import VsCodeLogo from '@/assets/vsCodeLogo.svg';
 
 /** Hardcoded source URL for skill installation deeplinks. */
@@ -20,6 +24,7 @@ const SKILL_SOURCE_URL = 'https://github.com/vercel-labs/agent-skills/tree/main/
 export const SkillInfo: React.FC = () => {
   const { name } = useParams<{ name: string }>();
   const api = useApi(name);
+  const config = useRecoilValue(configAtom);
   const evalResult = useSkillEvaluationResult(name);
   const [selectedTab, setSelectedTab] = useState<string>('documentation');
 
@@ -75,15 +80,17 @@ export const SkillInfo: React.FC = () => {
         </TabList>
       }
       headerActions={
-        <HeaderActions showExtensionHint>
-          <Button
-            size="medium"
-            icon={<img height={18} src={VsCodeLogo} alt="VS Code" />}
-            onClick={handleSkillInstall}
-          >
-            Install in VS Code
-          </Button>
-        </HeaderActions>
+        skillSourceUrl ? (
+          <HeaderActions showExtensionHint>
+            <Button
+              appearance="primary"
+              icon={<ArrowDownloadRegular />}
+              onClick={handleSkillInstall}
+            >
+              Install in VS Code
+            </Button>
+          </HeaderActions>
+        ) : undefined
       }
       isLoading={api.isLoading}
       error={api.isError ? 'Failed to load skill details. Please check your connection and try again.' : undefined}
@@ -92,11 +99,18 @@ export const SkillInfo: React.FC = () => {
       sidebar={undefined}
     >
       {api.data && selectedTab === 'documentation' && (
-        (api.data.description || api.data.summary) ? (
-          <MarkdownRenderer markdown={(api.data.description || api.data.summary)!} />
-        ) : (
-          <EmptyStateMessage>No description available for this skill.</EmptyStateMessage>
-        )
+        <>
+          <InstallationBlock
+            assetType="skill"
+            assetName={api.data?.name || name || 'skill'}
+            dataApiHostName={config.dataApiHostName}
+          />
+          {(api.data.description || api.data.summary) ? (
+            <MarkdownRenderer markdown={(api.data.description || api.data.summary)!} />
+          ) : (
+            <EmptyStateMessage>No description available for this skill.</EmptyStateMessage>
+          )}
+        </>
       )}
       {selectedTab === 'assessment' && (
         <SkillEvaluationDetails evalResult={evalResult.data} isLoading={evalResult.isLoading} />

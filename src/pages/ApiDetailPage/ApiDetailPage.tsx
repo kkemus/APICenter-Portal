@@ -2,8 +2,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Badge, Button, Dropdown, Link, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Option, SplitButton, Spinner, Tab, TabList } from '@fluentui/react-components';
 import { ArrowDownloadRegular, DocumentRegular, ListRegular, WindowConsoleRegular } from '@fluentui/react-icons';
+import { useRecoilValue } from 'recoil';
 import { useApi } from '@/hooks/useApi';
 import { useServer } from '@/hooks/useServer';
+import { configAtom } from '@/atoms/configAtom';
 import { kindToResourceType, ApiDefinitionId } from '@/types/apiDefinition';
 import { setDocumentTitle } from '@/utils/dom';
 import { DetailPageLayout } from '@/components/DetailPageLayout/DetailPageLayout';
@@ -18,12 +20,15 @@ import { useApiDefinitions } from '@/hooks/useApiDefinitions';
 import ApiSpecPageLayout from '@/pages/ApiSpec/ApiSpecPageLayout';
 import McpSpecPage from '@/pages/ApiSpec/McpSpecPage';
 import EmptyStateMessage from '@/components/EmptyStateMessage';
+import { ConnectPanel } from '@/components/ConnectPanel';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { InstallationBlock } from '@/components/InstallationBlock';
 import VsCodeLogo from '@/assets/vsCodeLogo.svg';
 
 export const ApiDetailPage: React.FC = () => {
   const { apiName } = useParams<{ apiName: string }>();
   const api = useApi(apiName);
+  const config = useRecoilValue(configAtom);
   const [definitionSelection, setDefinitionSelection] = useState<ApiDefinitionSelection | undefined>();
   const [selectedTab, setSelectedTab] = useState<string>('documentation');
 
@@ -114,6 +119,23 @@ export const ApiDetailPage: React.FC = () => {
 
   const hasInstall = hasMcpInstall || (kind === 'skill' && !!skillSourceUrl);
 
+  // Copyable endpoint URL for devs to use in CLI / other tools
+  const endpointUrl = useMemo(() => {
+    // MCP: prefer deployment runtimeUri, fall back to server remotes
+    if (kind === 'mcp') {
+      const deploymentUri = definitionSelection?.deployment?.server.runtimeUri[0];
+      if (deploymentUri) return deploymentUri;
+      const remoteUrl = server.data?.remotes?.[0]?.url;
+      if (remoteUrl) return remoteUrl;
+    }
+    // Skill: sourceUrl from custom properties
+    if (kind === 'skill' && skillSourceUrl) return skillSourceUrl;
+    // General APIs: runtimeUri from deployment
+    const deploymentUri = definitionSelection?.deployment?.server.runtimeUri[0];
+    if (deploymentUri) return deploymentUri;
+    return undefined;
+  }, [kind, definitionSelection?.deployment?.server.runtimeUri, server.data?.remotes, skillSourceUrl]);
+
   const isMcp = kind === 'mcp';
 
   const hasCustomProps = !!Object.keys(api.data?.customProperties || {}).length;
@@ -162,6 +184,38 @@ export const ApiDetailPage: React.FC = () => {
   }, [apiName, definitionSelection?.version?.name, downloadDefinitionName, definitionSelection?.definition?.name, api.data?.kind]);
 
   const downloadSpecUrl = useApiSpecUrl(downloadDefinitionId ?? { apiName: '', versionName: '', definitionName: '' });
+
+  function renderInstallationBlock() {
+    const kindLower = kind?.toLowerCase();
+    if (kindLower === 'mcp' && endpointUrl) {
+      return (
+        <InstallationBlock
+          assetType="mcp"
+          endpointUrl={endpointUrl}
+          assetName={api.data?.name || apiName || 'mcp-server'}
+        />
+      );
+    }
+    if (kindLower === 'plugin') {
+      return (
+        <InstallationBlock
+          assetType="plugin"
+          assetName={api.data?.name || apiName || 'plugin'}
+          dataApiHostName={config.dataApiHostName}
+        />
+      );
+    }
+    if (kindLower === 'skill') {
+      return (
+        <InstallationBlock
+          assetType="skill"
+          assetName={api.data?.name || apiName || 'skill'}
+          dataApiHostName={config.dataApiHostName}
+        />
+      );
+    }
+    return null;
+  }
 
   function renderDocumentation() {
     if (!definitionId) return null;
@@ -280,47 +334,13 @@ export const ApiDetailPage: React.FC = () => {
       headerActions={
         hasInstall ? (
           <HeaderActions showExtensionHint>
-            {hasMcpInstall && (
-              hasRemoteInstall && hasLocalInstall ? (
-                <Menu positioning="below-end">
-                  <MenuTrigger disableButtonEnhancement>
-                    {(triggerProps) => (
-                      <SplitButton
-                        size="medium"
-                        icon={<img height={18} src={VsCodeLogo} alt="VS Code" />}
-                        menuButton={triggerProps}
-                        primaryActionButton={{ onClick: () => handleMcpInstall('remote') }}
-                      >
-                        Install in VS Code
-                      </SplitButton>
-                    )}
-                  </MenuTrigger>
-                  <MenuPopover>
-                    <MenuList>
-                      <MenuItem onClick={() => handleMcpInstall('remote')}>Install remote server</MenuItem>
-                      <MenuItem onClick={() => handleMcpInstall('local')}>Install local server</MenuItem>
-                    </MenuList>
-                  </MenuPopover>
-                </Menu>
-              ) : (
-                <Button
-                  size="medium"
-                  icon={<img height={18} src={VsCodeLogo} alt="VS Code" />}
-                  onClick={() => handleMcpInstall()}
-                >
-                  Install in VS Code
-                </Button>
-              )
-            )}
-            {kind === 'skill' && skillSourceUrl && (
-              <Button
-                size="medium"
-                icon={<img height={18} src={VsCodeLogo} alt="VS Code" />}
-                onClick={handleSkillInstall}
-              >
-                Install in VS Code
-              </Button>
-            )}
+            <Button
+              appearance="primary"
+              icon={<ArrowDownloadRegular />}
+              onClick={hasMcpInstall ? () => handleMcpInstall() : handleSkillInstall}
+            >
+              Install in VS Code
+            </Button>
           </HeaderActions>
         ) : undefined
       }
@@ -333,15 +353,18 @@ export const ApiDetailPage: React.FC = () => {
       {api.data && selectedTab === 'documentation' && (
         isMcp ? (
           <>
+            {renderInstallationBlock()}
             {api.data.description && api.data.description !== api.data.summary && (
               <MarkdownRenderer markdown={api.data.description} />
             )}
             <ApiAdditionalInfo api={api.data} />
-            {(!api.data.description || api.data.description === api.data.summary) && !hasAdditionalInfo && (
-              <EmptyStateMessage>No documentation available for this MCP server.</EmptyStateMessage>
-            )}
           </>
-        ) : renderDocumentation()
+        ) : (
+          <>
+            {renderInstallationBlock()}
+            {renderDocumentation()}
+          </>
+        )
       )}
       {api.data && selectedTab === 'testconsole' && isMcp && renderDocumentation()}
       {api.data && selectedTab === 'properties' && (
