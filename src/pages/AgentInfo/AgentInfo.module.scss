@@ -1,0 +1,55 @@
+/* Page-specific styles for AgentInfo. */
+.placeholder {
+  display: none;
+}
+
+.markdown {
+  line-height: 1.5;
+
+  :global {
+    p,
+    ul,
+    ol {
+      margin-top: 0;
+      margin-bottom: 0.5em;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin-top: 1em;
+      margin-bottom: 0.4em;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.5em;
+    }
+
+    li {
+      margin-bottom: 0.15em;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: var(--colorNeutralBackground3);
+      font-size: 0.85em;
+    }
+
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+      border-radius: 6px;
+      background-color: var(--colorNeutralBackground3);
+
+      code {
+        padding: 0;
+        background: none;
+      }
+    }
+  }
+}
