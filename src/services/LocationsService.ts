@@ -39,6 +39,10 @@ export const LocationsService = {
     return `/apis/${name}`;
   },
 
+  getMcpServerUrl(name: string): string {
+    return `/servers/${name}`;
+  },
+
   getModelDetailUrl(name: string): string {
     return `/languageModels/${name}`;
   },
@@ -52,7 +56,7 @@ export const LocationsService = {
   },
 
   getModelPlaygroundUrl(name: string): string {
-    return `/languageModels/${name}/playground`;
+    return `/models/${name}`;
   },
 
   getApiSchemaExplorerUrl(

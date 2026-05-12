@@ -11,24 +11,28 @@ The application uses **React Router DOM v6** (`createBrowserRouter`) for client-
 | Path | Component | Parent | Purpose |
 |------|-----------|--------|---------|
 | `/` | `Home` | `Layout` | Landing page with search, filters, and API/model catalog |
+| `/apis/:apiName` | `ApiDetailPage` | `Layout` | Detail page for APIs (REST, GraphQL, gRPC, SOAP, plugin/skill/agent/model render via their own pages or detail layout) |
+| `/servers/:apiName` | `McpServerDetailPage` | `Layout` | Detail page for MCP servers |
 | `/apis/:apiName/versions/:versionName/definitions/:definitionName` | `ApiSpec` | `Layout` | Spec explorer for regular APIs |
 | `/languageModels/:apiName/versions/:versionName/definitions/:definitionName` | `ApiSpec` | `Layout` | Spec explorer for language models |
 | `/skills/:name` | `SkillInfo` | `Layout` | Skill detail page |
 | `/plugins/:name` | `PluginInfo` | `Layout` | Plugin detail page |
 | `/agents/:name` | `AgentChat` | `Layout` | Agent conversational UI |
-| `/languageModels/:name/playground` | `ModelPlayground` | `Layout` | Interactive model playground |
+| `/models/:name` | `ModelPlayground` | `Layout` | Interactive model test console |
 
 ### Route Hierarchy (tree view)
 
 ```
 Layout
 ├── / ............................................. Home (catalog + search)
+├── /apis/:apiName ................................ ApiDetailPage
+├── /servers/:apiName ............................. McpServerDetailPage
 ├── /apis/:apiName/versions/:versionName/definitions/:definitionName .... ApiSpec
 ├── /languageModels/:apiName/versions/:versionName/definitions/:definitionName .... ApiSpec
 ├── /skills/:name ................................ SkillInfo
 ├── /plugins/:name ............................... PluginInfo
 ├── /agents/:name ................................ AgentChat
-└── /languageModels/:name/playground ............. ModelPlayground
+└── /models/:name ................................ ModelPlayground
 ```
 
 ---
@@ -56,7 +60,7 @@ Layout
 - **Component**: `src/pages/ModelInfo/ModelInfo.tsx`
 - **Purpose**: Side drawer showing language model details — provider, model name, context window, task/input/output types, playground link, contacts, and documentation.
 - **Asset identifier**: `name` — language model name
-- **Nuances**: Same nested-drawer pattern as `ApiInfo`. The playground button navigates to `/languageModels/:name/playground`. Does not show version/definition selectors.
+- **Nuances**: Same nested-drawer pattern as `ApiInfo`. The test console button navigates to `/models/:name`. Does not show version/definition selectors.
 
 ### ApiSpec — APIs (`/apis/:apiName/versions/:versionName/definitions/:definitionName`)
 
@@ -98,10 +102,17 @@ Layout
 - **Purpose**: Conversational chat UI for an agent-type API.
 - **Route param**: `:name`
 
-### ModelPlayground (`/languageModels/:name/playground`)
+### McpServerDetailPage (`/servers/:apiName`)
+
+- **Component**: `src/pages/McpServerDetailPage/McpServerDetailPage.tsx`
+- **Purpose**: Full-page detail view for an MCP server, including local/remote install actions and a test console tab.
+- **Route param**: `:apiName`
+- **Nuance**: MCP servers no longer share the `/apis/:apiName` route; cards on the catalog navigate here via `getMcpServerUrl(name)`.
+
+### ModelPlayground (`/models/:name`)
 
 - **Component**: `src/pages/ModelPlayground/ModelPlayground.tsx`
-- **Purpose**: Interactive playground for sending messages to a language model and viewing responses.
+- **Purpose**: Interactive test console for sending messages to a language model and viewing responses.
 - **Route param**: `:name`
 
 ---
@@ -117,7 +128,8 @@ All internal URL construction is centralized in `src/services/LocationsService.t
 | `getSkillInfoUrl(name)` | `/skills/{name}` | |
 | `getPluginInfoUrl(name)` | `/plugins/{name}` | |
 | `getAgentChatUrl(name)` | `/agents/{name}` | |
-| `getModelPlaygroundUrl(name)` | `/languageModels/{name}/playground` | |
+| `getMcpServerUrl(name)` | `/servers/{name}` | |
+| `getModelPlaygroundUrl(name)` | `/models/{name}` | |
 | `getApiSchemaExplorerUrl(api, version, definition, resourceType?)` | `/{resourceType}/{api}/versions/{version}/definitions/{definition}` | Uses the asset-type route segment for browser navigation |
 | `getAiSearchInfoUrl()` | External docs link | |
 | `getHelpUrl()` | External docs link | |
@@ -140,7 +152,7 @@ This applies to the related model endpoints as well:
 
 - UI spec route: `/languageModels/chat-gpt/versions/{version}/definitions/{definition}`
 - Data API spec request: `/apis/chat-gpt/versions/{version}/definitions/{definition}`
-- UI playground route: `/languageModels/chat-gpt/playground`
+- UI test console route: `/models/chat-gpt`
 
 ---
 
@@ -155,6 +167,7 @@ Clicking an item in the API list navigates based on its `kind` (via `apiAdapter`
 | `'agent'` | `/agents/{name}` | `getAgentChatUrl` |
 | `'skill'` | `/skills/{name}` | `getSkillInfoUrl` |
 | `'plugin'` | `/plugins/{name}` | `getPluginInfoUrl` |
+| `'mcp'` | `/servers/{name}` | `getMcpServerUrl` |
 | `'languageModel'` | Home drawer for `{name}` | Home navigation state |
 | anything else | Home drawer for `{name}` | Home navigation state |
 
