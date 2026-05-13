@@ -13,6 +13,7 @@ interface DetailPageLayoutProps {
   title?: string;
   summary?: string;
   metadata?: React.ReactNode;
+  lastUpdated?: string;
   headerActions?: React.ReactNode;
   selector?: React.ReactNode;
   tabs?: React.ReactNode;
@@ -29,6 +30,7 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({
   title,
   summary,
   metadata,
+  lastUpdated,
   headerActions,
   selector,
   tabs,
@@ -100,7 +102,10 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({
           <div className={styles.headerText}>
             {title && <h1>{title}</h1>}
             {summary && <p className={styles.summary}>{summary}</p>}
-            {metadata && <div className={styles.metadata}>{metadata}</div>}
+            {metadata && <div className={styles.metadata}>
+              {metadata}
+              {lastUpdated && <span className={styles.lastUpdated}>Last updated {new Date(lastUpdated).toLocaleDateString()}</span>}
+            </div>}
             {selector && <div className={styles.selectorInline}>{selector}</div>}
           </div>
           {headerActions && <div className={styles.headerActions}>{headerActions}</div>}
