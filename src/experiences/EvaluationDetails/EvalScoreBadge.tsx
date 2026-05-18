@@ -1,10 +1,10 @@
 import React from 'react';
 import { Badge } from '@fluentui/react-components';
-import { SkillEvaluationResult } from '@/types/skillEvaluation';
-import styles from './SkillEvaluation.module.scss';
+import { EvaluationResult, getEvalScore } from '@/types/evaluation';
+import styles from './EvaluationDetails.module.scss';
 
 interface EvalScoreBadgeProps {
-  evalResult?: SkillEvaluationResult;
+  evalResult?: EvaluationResult;
 }
 
 type BadgeColor = 'success' | 'warning' | 'danger';
@@ -17,9 +17,12 @@ function scoreBadgeColor(ratio: number): BadgeColor {
 
 /** Compact score pill for the header metadata area. */
 export const EvalScoreBadge: React.FC<EvalScoreBadgeProps> = ({ evalResult }) => {
-  if (!evalResult || evalResult.maxScore <= 0) return null;
+  if (!evalResult) return null;
 
-  const ratio = evalResult.overallScore / evalResult.maxScore;
+  const { overallScore, maxScore } = getEvalScore(evalResult);
+  if (maxScore <= 0) return null;
+
+  const ratio = overallScore / maxScore;
   const normalized = ratio * 5;
   const display = normalized.toFixed(1);
   const color = scoreBadgeColor(ratio);

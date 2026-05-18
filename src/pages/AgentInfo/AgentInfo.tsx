@@ -5,6 +5,8 @@ import { ArrowDownloadRegular, CodeRegular, DocumentRegular } from '@fluentui/re
 import { useApi } from '@/hooks/useApi';
 import { useAgentVersions } from '@/hooks/useAgentVersions';
 import { useAgentDefinition } from '@/hooks/useAgentDefinition';
+import { useAgentEvaluationResult } from '@/hooks/useAgentEvaluationResult';
+import { getEvalScore } from '@/types/evaluation';
 import { setDocumentTitle } from '@/utils/dom';
 import { getLifecycleBadgeColor, formatLifecycleStage } from '@/utils/badgeSystem';
 import { DetailPageLayout, BreadcrumbItem } from '@/components/DetailPageLayout/DetailPageLayout';
@@ -14,9 +16,10 @@ import { EmptyStateMessage } from '@/components/EmptyStateMessage/EmptyStateMess
 import { HeaderActions } from '@/experiences/HeaderActions';
 import { VersionSelect } from '@/experiences/VersionSelect';
 import { AgentDefinition } from '@/experiences/AgentDefinition';
+import { EvaluationDetails } from '@/experiences/EvaluationDetails';
 import styles from './AgentInfo.module.scss';
 
-type AgentTab = 'documentation' | 'definition' | 'properties';
+type AgentTab = 'documentation' | 'definition' | 'assessment' | 'properties';
 
 export const AgentInfo: React.FC = () => {
   const { name } = useParams<{ name: string }>();
@@ -27,11 +30,14 @@ export const AgentInfo: React.FC = () => {
 
   setDocumentTitle(`Agent${api.data?.title ? ` - ${api.data.title}` : ''}`);
 
-  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => [
-    { label: 'Home', href: '/' },
-    { label: 'Agents', href: '/?kind=agent' },
-    { label: api.data?.title || name || '...' },
-  ], [api.data?.title, name]);
+  const breadcrumbs = useMemo<BreadcrumbItem[]>(
+    () => [
+      { label: 'Home', href: '/' },
+      { label: 'Agents', href: '/?kind=agent' },
+      { label: api.data?.title || name || '...' },
+    ],
+    [api.data?.title, name]
+  );
   // Auto-select the first version once versions load.
   useEffect(() => {
     if (!selectedVersion && versions.data && versions.data.length > 0) {
@@ -39,7 +45,20 @@ export const AgentInfo: React.FC = () => {
     }
   }, [versions.data, selectedVersion]);
 
+  // Reset selected version when navigating to a different agent.
+  useEffect(() => {
+    setSelectedVersion(undefined);
+  }, [name]);
+
   const definition = useAgentDefinition(api.data?.name, selectedVersion);
+  const evalResult = useAgentEvaluationResult(api.data?.name, selectedVersion);
+
+  // Fall back to definition tab if assessment data disappears after version change.
+  useEffect(() => {
+    if (selectedTab === 'assessment' && evalResult.isFetched && !evalResult.isFetching && !evalResult.data) {
+      setSelectedTab('definition');
+    }
+  }, [selectedTab, evalResult.isFetched, evalResult.isFetching, evalResult.data]);
 
   const handleDownload = useCallback(() => {
     if (!api.data?.name || !selectedVersion || !definition.data) return;
@@ -110,6 +129,30 @@ export const AgentInfo: React.FC = () => {
           <Tab icon={<DocumentRegular />} value="documentation">
             Documentation
           </Tab>
+          {evalResult.data && (() => {
+            const { overallScore, maxScore } = getEvalScore(evalResult.data);
+            return (
+              <Tab value="assessment">
+                Assessment
+                {maxScore > 0 && (
+                  <Badge
+                    appearance="filled"
+                    color={
+                      overallScore / maxScore >= 0.8
+                        ? 'success'
+                        : overallScore / maxScore >= 0.6
+                          ? 'warning'
+                          : 'danger'
+                    }
+                    shape="circular"
+                    style={{ marginLeft: 8 }}
+                  >
+                    {((overallScore / maxScore) * 5).toFixed(1)}/5
+                  </Badge>
+                )}
+              </Tab>
+            );
+          })()}
           {hasCustomProps && <Tab value="properties">Additional properties</Tab>}
         </TabList>
       }
@@ -131,6 +174,10 @@ export const AgentInfo: React.FC = () => {
 
       {api.data && selectedTab === 'definition' && (
         <AgentDefinition definition={definition} hasVersion={!!selectedVersion} />
+      )}
+
+      {selectedTab === 'assessment' && (
+        <EvaluationDetails evalResult={evalResult.data} isLoading={evalResult.isLoading} />
       )}
 
       {api.data && selectedTab === 'properties' && hasCustomProps && (

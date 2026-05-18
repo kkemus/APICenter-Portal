@@ -1,5 +1,5 @@
 export { EvalScoreBadge } from './EvalScoreBadge';
-export { SkillEvaluationDetails } from './SkillEvaluationDetails';
+export { EvaluationDetails } from './EvaluationDetails';
 export { EvalScoreBar } from './EvalScoreBar';
 export { EvalAssertionList } from './EvalAssertionList';
 export { EvalRadarChart } from './EvalRadarChart';
