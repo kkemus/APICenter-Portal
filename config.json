@@ -4,11 +4,7 @@
   "authentication": {
       "clientId": "eff8ac8e-d250-4a24-b4b8-3829e351c01a",
       "tenantId": "933c9cbe-35d3-4416-abbd-ddd1bca5879c",
-      "scopes": ["https://azure-apicenter.net/Data.Read.All"],
+      "scopes": ["https://azure-apicenter.net/user_impersonation"],
       "authority": "https://login.microsoftonline.com/"
-  },
-  "mcp": {
-      "useCorsProxy": false,
-      "enableEntraIdAuth": false
   }
 }
