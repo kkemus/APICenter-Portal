@@ -20,7 +20,6 @@ const EXTENSION_URL = 'https://marketplace.visualstudio.com/items?itemName=apide
 
 export const ConnectPanel: React.FC<ConnectPanelProps> = ({
   endpointUrl,
-  assetName,
   onVsCodeInstall,
   hasVsCodeInstall,
 }) => {
